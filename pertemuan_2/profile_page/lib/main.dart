@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 void main() {
   runApp(const MyApp());
@@ -33,6 +36,22 @@ class ProfilePage extends StatefulWidget {
 
 class _ProfilePageState extends State<ProfilePage> {
   int _selectedIndex = 1; // Index profil (0: Home, 1: Profil, 2: Pesan, 3: Setting)
+
+  // Profile State Variables
+  String _name = 'Jenas Aldera';
+  String _role = 'Game Developer | Mahasiswa Teknik Informatika';
+  String _location = 'Bandung, Indonesia';
+  String _about = 'Halo! Saya adalah mahasiswa Teknik Informatika yang sangat antusias dengan pengembangan Game.';
+  String _education = '🎓 Universitas Pasundan - Semester 6\n📚 Teknik Informatika\n⭐ IPK: 4.0\n🏆 Best Student Award 2077';
+  String _contact = '📧 jenasaldera1425@gmail.com\n📱 +62 896-6230-8886\n💻 github.com/jenasaldera\n🔗 linkedin.com/in/jenasaldera';
+  List<String> _skills = ['Dart', 'Git', 'UI/UX', 'Unity'];
+  String? _profileImagePath;
+  String _profileImageUrl = 'https://avatars.githubusercontent.com/u/145580540?v=4';
+
+  // Experience State Variables (Bonus)
+  String _expTitle = 'Game Dev Intern - PT AnTech Async (2077)';
+  String _expDesc = 'Mengerjakan berbagai proyek game menggunakan Unity.';
+  String? _expImagePath;
 
   void _onNavigationTap(int index) {
     setState(() {
@@ -97,8 +116,8 @@ class _ProfilePageState extends State<ProfilePage> {
       drawer: Drawer(
         child: ListView(
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
+            DrawerHeader(
+              decoration: const BoxDecoration(
                 gradient: LinearGradient(
                   colors: [Colors.blue, Colors.blueAccent],
                   begin: Alignment.topLeft,
@@ -112,16 +131,18 @@ class _ProfilePageState extends State<ProfilePage> {
                   CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.white,
-                    child: Icon(Icons.person, size: 40, color: Colors.blue),
+                    backgroundImage: _profileImagePath != null
+                        ? (kIsWeb ? NetworkImage(_profileImagePath!) : FileImage(File(_profileImagePath!))) as ImageProvider
+                        : NetworkImage(_profileImageUrl) as ImageProvider,
                   ),
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
                   Text(
-                    'Jenas Aldera',
-                    style: TextStyle(color: Colors.white, fontSize: 20),
+                    _name,
+                    style: const TextStyle(color: Colors.white, fontSize: 20),
                   ),
                   Text(
-                    'jenasaldera1425@gmail.com',
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                    _contact.split('\n').first.replaceAll('📧 ', ''),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),
@@ -141,6 +162,32 @@ class _ProfilePageState extends State<ProfilePage> {
               title: const Text('Profil Saya'),
               tileColor: Colors.blue.shade50,
               onTap: () => Navigator.pop(context),
+            ),
+            // ========== MENU EDIT PENGALAMAN (Bonus) ==========
+            ListTile(
+              leading: const Icon(Icons.work_history, color: Colors.blue),
+              title: const Text('Edit Pengalaman'),
+              onTap: () async {
+                Navigator.pop(context);
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditExperiencePage(
+                      initialTitle: _expTitle,
+                      initialDesc: _expDesc,
+                      initialImagePath: _expImagePath,
+                    ),
+                  ),
+                );
+
+                if (result != null && result is Map<String, String?>) {
+                  setState(() {
+                    _expTitle = result['title'] ?? _expTitle;
+                    _expDesc = result['desc'] ?? _expDesc;
+                    _expImagePath = result['imagePath'];
+                  });
+                }
+              },
             ),
             // ========== MENU WIDGET GALLERY ==========
             ListTile(
@@ -193,14 +240,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   Stack(
                     alignment: Alignment.bottomRight,
                     children: [
-                      const CircleAvatar(
+                      CircleAvatar(
                         radius: 55,
                         backgroundColor: Colors.blue,
                         child: CircleAvatar(
                           radius: 52,
-                          backgroundImage: NetworkImage(
-                            'https://avatars.githubusercontent.com/u/145580540?v=4  ',
-                          ),
+                          backgroundImage: _profileImagePath != null
+                              ? (kIsWeb ? NetworkImage(_profileImagePath!) : FileImage(File(_profileImagePath!))) as ImageProvider
+                              : NetworkImage(_profileImageUrl) as ImageProvider,
                         ),
                       ),
                       Container(
@@ -213,13 +260,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Text(
-                    'Jenas Aldera',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                  Text(
+                    _name,
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Game Developer | Mahasiswa Teknik Informatika',
+                    _role,
                     style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                     textAlign: TextAlign.center,
                   ),
@@ -230,12 +277,12 @@ class _ProfilePageState extends State<ProfilePage> {
                       color: Colors.blue.shade100,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.location_on, size: 14, color: Colors.blue),
-                        SizedBox(width: 4),
-                        Text('Bandung, Indonesia', style: TextStyle(fontSize: 12)),
+                        const Icon(Icons.location_on, size: 14, color: Colors.blue),
+                        const SizedBox(width: 4),
+                        Text(_location, style: const TextStyle(fontSize: 12)),
                       ],
                     ),
                   ),
@@ -255,41 +302,33 @@ class _ProfilePageState extends State<ProfilePage> {
             const SizedBox(height: 24),
 
             // SECTION CARDS
-            const _SectionCard(
+            _SectionCard(
               icon: Icons.info_outline,
               title: 'Tentang Saya',
-              content: 'Halo! Saya adalah mahasiswa Teknik Informatika yang sangat '
-                  'antusias dengan pengembangan Game.',
+              content: _about,
             ),
-            const _SectionCard(
+            _SectionCard(
               icon: Icons.school,
               title: 'Pendidikan',
-              content: '🎓 Universitas Pasundan - Semester 6\n'
-                  '📚 Teknik Informatika\n'
-                  '⭐ IPK: 4.0\n'
-                  '🏆 Best Student Award 2077',
+              content: _education,
             ),
 
             // SKILLS SECTION (Tugas 3 - dengan Wrap dan Chip)
             _SkillsCard(
-              skills: const ['Dart' , 'Git', 'UI/UX' , 'Unity'],
+              skills: _skills,
             ),
 
-            const _SectionCard(
-              icon: Icons.work,
-              title: 'Pengalaman',
-              content: '💼 Game Dev Intern - PT AnTech Async (2077)\n'
-                  '📱 Freelance Web Developer (2023-sekarang)\n'
-                  '🎯 Game Developer Student Club',
+            // EXPERIENCE SECTION (Bonus)
+            _ExperienceCard(
+              title: _expTitle,
+              description: _expDesc,
+              imagePath: _expImagePath,
             ),
 
-            const _SectionCard(
+            _SectionCard(
               icon: Icons.email,
               title: 'Kontak',
-              content: '📧 jenasaldera1425@gmail.com\n'
-                  '📱 +62 896-6230-8886\n'
-                  '💻 github.com/jenasaldera\n'
-                  '🔗 linkedin.com/in/jenasaldera',
+              content: _contact,
             ),
 
             const _SectionCard(
@@ -307,15 +346,36 @@ class _ProfilePageState extends State<ProfilePage> {
 
       // ========== FLOATING ACTION BUTTON ==========
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () {
-          // Tugas 4: SnackBar saat FAB ditekan
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('✏️ Edit profil belum tersedia saat ini'),
-              behavior: SnackBarBehavior.floating,
-              duration: Duration(seconds: 2),
+        onPressed: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => EditProfilePage(
+                initialName: _name,
+                initialRole: _role,
+                initialLocation: _location,
+                initialAbout: _about,
+                initialEducation: _education,
+                initialContact: _contact,
+                initialSkills: _skills,
+                initialImagePath: _profileImagePath,
+                initialImageUrl: _profileImageUrl,
+              ),
             ),
           );
+
+          if (result != null && result is Map<String, dynamic>) {
+            setState(() {
+              _name = result['name'] ?? _name;
+              _role = result['role'] ?? _role;
+              _location = result['location'] ?? _location;
+              _about = result['about'] ?? _about;
+              _education = result['education'] ?? _education;
+              _contact = result['contact'] ?? _contact;
+              _skills = result['skills'] ?? _skills;
+              _profileImagePath = result['imagePath'];
+            });
+          }
         },
         icon: const Icon(Icons.edit),
         label: const Text('Edit Profil'),
@@ -469,6 +529,91 @@ class _SectionCard extends StatelessWidget {
                   ),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ========== HELPER WIDGET: EXPERIENCE CARD (Bonus) ==========
+class _ExperienceCard extends StatelessWidget {
+  final String title;
+  final String description;
+  final String? imagePath;
+
+  const _ExperienceCard({
+    required this.title,
+    required this.description,
+    this.imagePath,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(Icons.work, color: Colors.blue, size: 24),
+                ),
+                const SizedBox(width: 16),
+                const Text(
+                  'Pengalaman',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (imagePath != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: kIsWeb
+                    ? Image.network(
+                        imagePath!,
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      )
+                    : Image.file(
+                        File(imagePath!),
+                        height: 150,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+              )
+            else
+              Container(
+                height: 150,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.image, size: 50, color: Colors.grey),
+              ),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              description,
+              style: TextStyle(color: Colors.grey.shade700, height: 1.4),
             ),
           ],
         ),
@@ -1048,6 +1193,291 @@ class _LayoutDemo extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+// ========== PAGE: EDIT PROFILE ==========
+class EditProfilePage extends StatefulWidget {
+  final String initialName;
+  final String initialRole;
+  final String initialLocation;
+  final String initialAbout;
+  final String initialEducation;
+  final String initialContact;
+  final List<String> initialSkills;
+  final String? initialImagePath;
+  final String initialImageUrl;
+
+  const EditProfilePage({
+    super.key,
+    required this.initialName,
+    required this.initialRole,
+    required this.initialLocation,
+    required this.initialAbout,
+    required this.initialEducation,
+    required this.initialContact,
+    required this.initialSkills,
+    this.initialImagePath,
+    required this.initialImageUrl,
+  });
+
+  @override
+  State<EditProfilePage> createState() => _EditProfilePageState();
+}
+
+class _EditProfilePageState extends State<EditProfilePage> {
+  late TextEditingController _nameController;
+  late TextEditingController _roleController;
+  late TextEditingController _locationController;
+  late TextEditingController _aboutController;
+  late TextEditingController _educationController;
+  late TextEditingController _contactController;
+  late TextEditingController _skillsController;
+  String? _imagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController(text: widget.initialName);
+    _roleController = TextEditingController(text: widget.initialRole);
+    _locationController = TextEditingController(text: widget.initialLocation);
+    _aboutController = TextEditingController(text: widget.initialAbout);
+    _educationController = TextEditingController(text: widget.initialEducation);
+    _contactController = TextEditingController(text: widget.initialContact);
+    _skillsController = TextEditingController(text: widget.initialSkills.join(', '));
+    _imagePath = widget.initialImagePath;
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _imagePath = image.path;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Edit Profil'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.check),
+            onPressed: () {
+              Navigator.pop(context, {
+                'name': _nameController.text,
+                'role': _roleController.text,
+                'location': _locationController.text,
+                'about': _aboutController.text,
+                'education': _educationController.text,
+                'contact': _contactController.text,
+                'skills': _skillsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+                'imagePath': _imagePath,
+              });
+            },
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            Center(
+              child: Stack(
+                alignment: Alignment.bottomRight,
+                children: [
+                  CircleAvatar(
+                    radius: 60,
+                    backgroundImage: _imagePath != null
+                        ? (kIsWeb ? NetworkImage(_imagePath!) : FileImage(File(_imagePath!))) as ImageProvider
+                        : NetworkImage(widget.initialImageUrl) as ImageProvider,
+                  ),
+                  IconButton.filled(
+                    onPressed: _pickImage,
+                    icon: const Icon(Icons.camera_alt),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _nameController,
+              decoration: const InputDecoration(labelText: 'Nama Lengkap', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _roleController,
+              decoration: const InputDecoration(labelText: 'Pekerjaan/Status', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _locationController,
+              decoration: const InputDecoration(labelText: 'Lokasi', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _aboutController,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: 'Tentang Saya', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _educationController,
+              maxLines: 4,
+              decoration: const InputDecoration(labelText: 'Pendidikan', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _contactController,
+              maxLines: 4,
+              decoration: const InputDecoration(labelText: 'Kontak', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _skillsController,
+              decoration: const InputDecoration(
+                labelText: 'Skills (pisahkan dengan koma)',
+                border: OutlineInputBorder(),
+                hintText: 'Flutter, Dart, UI/UX',
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, {
+                    'name': _nameController.text,
+                    'role': _roleController.text,
+                    'location': _locationController.text,
+                    'about': _aboutController.text,
+                    'education': _educationController.text,
+                    'contact': _contactController.text,
+                    'skills': _skillsController.text.split(',').map((e) => e.trim()).where((e) => e.isNotEmpty).toList(),
+                    'imagePath': _imagePath,
+                  });
+                },
+                child: const Text('Simpan Perubahan'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ========== PAGE: EDIT EXPERIENCE (Bonus) ==========
+class EditExperiencePage extends StatefulWidget {
+  final String initialTitle;
+  final String initialDesc;
+  final String? initialImagePath;
+
+  const EditExperiencePage({
+    super.key,
+    required this.initialTitle,
+    required this.initialDesc,
+    this.initialImagePath,
+  });
+
+  @override
+  State<EditExperiencePage> createState() => _EditExperiencePageState();
+}
+
+class _EditExperiencePageState extends State<EditExperiencePage> {
+  late TextEditingController _titleController;
+  late TextEditingController _descController;
+  String? _imagePath;
+
+  @override
+  void initState() {
+    super.initState();
+    _titleController = TextEditingController(text: widget.initialTitle);
+    _descController = TextEditingController(text: widget.initialDesc);
+    _imagePath = widget.initialImagePath;
+  }
+
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _imagePath = image.path;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Edit Pengalaman')),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            GestureDetector(
+              onTap: _pickImage,
+              child: Container(
+                height: 200,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade200,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade400),
+                ),
+                child: _imagePath != null
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: kIsWeb
+                            ? Image.network(_imagePath!, fit: BoxFit.cover)
+                            : Image.file(File(_imagePath!), fit: BoxFit.cover),
+                      )
+                    : const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.add_a_photo, size: 50, color: Colors.grey),
+                          SizedBox(height: 8),
+                          Text('Pilih Gambar Pengalaman', style: TextStyle(color: Colors.grey)),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            TextField(
+              controller: _titleController,
+              decoration: const InputDecoration(labelText: 'Judul Pengalaman', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _descController,
+              maxLines: 5,
+              decoration: const InputDecoration(labelText: 'Deskripsi Singkat', border: OutlineInputBorder()),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context, {
+                    'title': _titleController.text,
+                    'desc': _descController.text,
+                    'imagePath': _imagePath,
+                  });
+                },
+                child: const Text('Simpan Pengalaman'),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
